@@ -28,11 +28,20 @@ RUN apt install -y openssh-server openvpn gvfs-bin xrdp net-tools telnet less vi
 
 RUN sed -i 's/UseDNS yes/UseDNS no/g' /etc/ssh/sshd_config
 
-# TODO: These should work but don't
+
+# Services
+COPY ssupervisor.sh /usr/sbin/
+RUN mkdir /etc/ssupervisor
+
 RUN update-rc.d rsyslog enable && \
+    echo "0 rsyslog" >> /etc/ssupervisor/services && \
     update-rc.d dbus enable && \
+    echo "0 dbus" >> /etc/ssupervisor/services && \
     update-rc.d ssh enable && \
-    update-rc.d xrdp enable
+    echo "0 ssh" >> /etc/ssupervisor/services && \
+    update-rc.d xrdp enable && \
+    echo "0 xrdp" >> /etc/ssupervisor/services
+
 
 # User
 RUN addgroup tsusers
@@ -45,9 +54,4 @@ RUN sed -i 's/^fi$/else\n  lxsession -s Lubuntu -e LXDE\nfi/g' /etc/X11/Xsession
 EXPOSE 3389
 EXPOSE 22
 
-# TODO: Shouldn't have to start these manually
-CMD service rsyslog start && \
-    service dbus start && \
-    service ssh start && \
-    service xrdp start && \
-    tail -f /var/log/syslog
+CMD /usr/sbin/ssupervisor.sh

@@ -31,3 +31,15 @@ RUN curl -o /tmp/kotlin.sh https://get.sdkman.io -sSf && \
     mkdir /opt/kotlin && \
     SDKMAN_DIR=/opt/kotlin /tmp/kotlin.sh && \
     rm /tmp/kotlin.sh
+
+RUN apt install -y autoconf automake libtool
+
+
+RUN wget -qO - https://github.com/google/protobuf/archive/v3.5.0.1.tar.gz | tar xz && \
+    cd protobuf-3.5.0.1 && \
+    ./autogen.sh && \
+    ./configure --prefix=/usr && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -rf protobuf-3.5.0.1

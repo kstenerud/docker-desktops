@@ -1,6 +1,7 @@
 DOCKER_APP_NAME=
 DOCKER_APP_MOUNT_POINT=
 DOCKER_APP_START_OPTIONS=
+declare -A DOCKER_APP_PORT_INDICES
 
 source "${DOCKER_APP_DIR}/docker-config"
 source "${DOCKER_APP_DIR}/../registry"
@@ -9,10 +10,14 @@ if [ -z "${DOCKER_APP_NAME}" ]; then
 	DOCKER_APP_NAME=${DOCKER_IMAGE_NAME}
 fi
 
+set +u
 DOCKER_APP_PORT_INDEX=${DOCKER_APP_PORT_INDICES[$DOCKER_APP_NAME]}
+set -u
 if [ -z "${DOCKER_APP_PORT_INDEX}" ]; then
-	echo "Please add ${DOCKER_APP_NAME} to the registry"
-	exit -1
+	if [[ ! "$DOCKER_APP_NAME" == *-base ]]; then
+		echo "Please add ${DOCKER_APP_NAME} to the registry"
+		exit -1
+	fi
 fi
 
 if [ -z "${DOCKER_APP_MOUNT_POINT}" ]; then
