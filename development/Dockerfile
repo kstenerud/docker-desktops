@@ -1,3 +1,3 @@
-FROM development-base
+FROM base-development
 MAINTAINER Karl Stenerud <kstenerud@gmail.com>
 

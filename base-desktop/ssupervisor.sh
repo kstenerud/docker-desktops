@@ -48,7 +48,7 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-set -e
+set -eu
 
 # Configuration
 
@@ -74,8 +74,10 @@ load_services() {
 			delay=$(echo "$var" | awk '{print $1}')
 			service=$(echo "$var" | awk '{print $2}')
 			if [ ! -z "$delay" ] && [ ! -z "$service" ]; then
+				set +u
 				SERVICE_ORDER[$index]=$service
 				SERVICE_DELAY[$service]=$delay
+				set -u
 				index=$(( index + 1 ))
 			fi
 		fi
@@ -126,12 +128,11 @@ poll_services() {
 	done
 }
 
+main() {
+	load_services
+	set +e
+	poll_services
+}
 
-# Main
 
-load_services
-
-set +e
-set -u
-
-poll_services &>> "$LOG_FILE"
+main &>> "$LOG_FILE"

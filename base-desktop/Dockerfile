@@ -54,4 +54,4 @@ RUN sed -i 's/^fi$/else\n  lxsession -s Lubuntu -e LXDE\nfi/g' /etc/X11/Xsession
 EXPOSE 3389
 EXPOSE 22
 
-CMD /usr/sbin/ssupervisor.sh
+ENTRYPOINT ["/usr/sbin/ssupervisor.sh"]

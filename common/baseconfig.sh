@@ -14,7 +14,7 @@ set +u
 DOCKER_APP_PORT_INDEX=${DOCKER_APP_PORT_INDICES[$DOCKER_APP_NAME]}
 set -u
 if [ -z "${DOCKER_APP_PORT_INDEX}" ]; then
-	if [[ ! "$DOCKER_APP_NAME" == *-base ]]; then
+	if [[ ! "$DOCKER_APP_NAME" == base-* ]]; then
 		echo "Please add ${DOCKER_APP_NAME} to the registry"
 		exit -1
 	fi

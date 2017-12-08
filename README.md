@@ -19,8 +19,6 @@ Features
 Future
 ------
 
-- Restarting stopped containers without RDP going nuts.
-- Get services properly registered in the container so they don't need to be started via CMD.
 - Guacamole support.
 - Possibly noVNC support.
 - More mature dev environment (not everything is tested atm).
@@ -40,7 +38,7 @@ Run the script commands inside of one of the subdirs:
 Each desktop type is registered with a port index in the `registry` file. RDP
 and SSH ports will be bound as `3390 + index` for RDP, and `2000 + index` for SSH.
 
-The XYZ-base directories are for base images, and are not meant to be run directly.
+The base-XYZ directories are for base images, and are not meant to be run directly.
 You'll need to build them as precursors to the runnable desktop images.
 
 
@@ -62,6 +60,20 @@ Make a copy of one of the desktop image directories and:
 - Modify docker-config to set the name you want + any extra configuration parameters.
 - Modify ../registry to add a port index for your new image.
 - Modify the Dockerfile to your tastes.
+
+
+Admin Commands
+--------------
+
+In the `admin` directory you'll find some helpful administration scripts for Docker:
+
+- remove-stopped.sh: Remove all stopped containers.
+                     Often you'll end up with containers that were built during
+                     development & testing but are now useless. This clears them out.
+
+- remove-unused.sh: Remove all images that aren't being used by anything.
+                    During development of Dockerfiles, you'll end up with a lot of
+                    orphaned images from previous builds. This clears them out.
 
 
 Copyright & License
