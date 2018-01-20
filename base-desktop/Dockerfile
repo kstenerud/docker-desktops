@@ -1,57 +1,96 @@
-FROM ubuntu:17.04
+FROM ubuntu:17.10
 MAINTAINER Karl Stenerud <kstenerud@gmail.com>
 
-RUN apt update -y && apt upgrade -y
+# This image should be run with --init. Otherwise prepare for zombies.
 
-# Locale & Keyboard
+
+# =============
+# Initial Setup
+# =============
+
+RUN apt update -y && apt upgrade -y && apt autoremove
 RUN apt install -y locales debconf
-RUN locale-gen en_US en_US.UTF-8
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
-RUN locale > /etc/default/locale
-RUN echo "keyboard-configuration keyboard-configuration/modelcode string pc105\n\
-keyboard-configuration keyboard-configuration/layoutcode string us\n" | debconf-set-selections
+
+# Format <language> <region> <keyboard layout> <keyboard model>
+# "en US us pc105" generates LANG en_US.UTF-8, with "us" keyboard model "pc105"
+ARG LANG_KB="en US us pc105"
+
+COPY fs/usr/sbin/set_lang_kb.sh /usr/sbin/
+RUN /usr/sbin/set_lang_kb.sh $LANG_KB
+
+
+# =================
+# Main Installation
+# =================
+
+ARG XRDP_VERSION=v0.9.5
+ARG XORGXRDP_VERSION=v0.2.5
 
 # Desktop Environment
 RUN apt install -y lubuntu-desktop && \
     apt remove -y light-locker
 
-RUN apt install -y software-properties-common && \
-    add-apt-repository -y ppa:x2go/stable && \
-    apt update && \
-    apt install -y x2goserver x2goserver-xsession
+# Other common software
+RUN apt install -y openssh-server openvpn gvfs-bin net-tools telnet less vim curl \
+                   apt-transport-https zip unzip wget file build-essential git
 
-RUN apt install -y openssh-server openvpn gvfs-bin xrdp net-tools telnet less vim curl \
-                   apt-transport-https network-manager network-manager-openvpn-gnome \
-                   zip unzip
+RUN apt install -y libx11-dev libxfixes-dev libssl-dev libpam0g-dev libtool libjpeg-dev flex bison gettext autoconf libxml-parser-perl libfuse-dev xsltproc libxrandr-dev python-libxml2 nasm xserver-xorg-dev fuse pkg-config
 
+RUN apt install libglu1-mesa x11-apps x11-session-utils xbitmaps xfonts-scalable xinit xinput xorg xorg-docs-core
+
+RUN git clone https://github.com/neutrinolabs/xrdp.git && \
+    cd xrdp && \
+    git checkout ${XRDP_VERSION} && \
+    ./bootstrap && \
+    ./configure --prefix=/usr --enable-fuse --enable-jpeg && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -rf xrdp
+
+RUN git clone https://github.com/neutrinolabs/xorgxrdp.git && \
+    cd xorgxrdp && \
+    git checkout ${XORGXRDP_VERSION} && \
+    ./bootstrap && \
+    ./configure --prefix=/usr && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -rf xorgxrdp
+
+COPY fs/ /
+
+
+# ====
+# User
+# ====
+
+ARG USER=karl
+ARG PASSWORD=$USER
+
+RUN addgroup tsusers
+RUN useradd --create-home --shell /bin/bash --user-group --groups adm,sudo,tsusers $USER
+RUN echo "$USER:$PASSWORD" | chpasswd
+
+
+# ===================
+# Final Configuration
+# ===================
+
+# Xrfb stuff
+RUN sed -i 's/allowed_users=console/allowed_users=anybody/' /etc/X11/Xwrapper.config && \
+    apt install -y xserver-xorg-core
+
+RUN systemctl enable xrdp.service && \
+    systemctl enable xrdp-sesman.service
+
+# Disable SSH DNS lookup becase it slows down SSH login terribly.
 RUN sed -i 's/UseDNS yes/UseDNS no/g' /etc/ssh/sshd_config
 
-
-# Services
-COPY ssupervisor.sh /usr/sbin/
-RUN mkdir /etc/ssupervisor
-
-RUN update-rc.d rsyslog enable && \
-    echo "0 rsyslog" >> /etc/ssupervisor/services && \
-    update-rc.d dbus enable && \
-    echo "0 dbus" >> /etc/ssupervisor/services && \
-    update-rc.d ssh enable && \
-    echo "0 ssh" >> /etc/ssupervisor/services && \
-    update-rc.d xrdp enable && \
-    echo "0 xrdp" >> /etc/ssupervisor/services
-
-
-# User
-RUN addgroup tsusers
-RUN useradd --create-home --shell /bin/bash --user-group --groups adm,sudo,tsusers karl
-RUN echo "karl:karl" | chpasswd
-
-# Hack to allow .xsession to not exist
+# Hack to load LXDE by default if .xsession doesn't exist
 RUN sed -i 's/^fi$/else\n  lxsession -s Lubuntu -e LXDE\nfi/g' /etc/X11/Xsession.d/40x11-common_xsessionrc
 
 EXPOSE 3389
 EXPOSE 22
 
-ENTRYPOINT ["/usr/sbin/ssupervisor.sh"]
+CMD ["/usr/sbin/ssupervisor.sh"]

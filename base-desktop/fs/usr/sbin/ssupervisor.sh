@@ -18,21 +18,21 @@
 # -------------
 #
 # ssupervisor reads /etc/ssupervisor/services for a list of services to monitor.
-# The line format is <delay> <service>
+# The line format is <service> [delay]
 # Where:
-#   delay   = (floating point) delay in seconds before starting the service
 #   service = the name of the service
+#   delay   = (floating point) delay in seconds before starting the service
 #
 # Lines beginning with # are ignored.
 #
 # Note: The file MUST end in an empty line or else the last line will be ignored!
 #
 # Example file:
-# 0 ssh
-# 0 nmbd
-# 0.2 smbd
-# # a comment
-# 10 mycomplicatedservice
+# ssh 0
+# # 0 by default
+# nmbd
+# smbd 0.2
+# mycomplicatedservice 3
 #
 #
 # License & Copyright
@@ -71,9 +71,12 @@ load_services() {
 	while IFS= read -r var
 	do
 		if [[ ! $var = \#* ]]; then
-			delay=$(echo "$var" | awk '{print $1}')
-			service=$(echo "$var" | awk '{print $2}')
-			if [ ! -z "$delay" ] && [ ! -z "$service" ]; then
+			service=$(echo "$var" | awk '{print $1}')
+			delay=$(echo "$var" | awk '{print $2}')
+			if [ ! -z "$service" ]; then
+				if [ -z "$delay" ]; then
+					delay=0
+				fi
 				set +u
 				SERVICE_ORDER[$index]=$service
 				SERVICE_DELAY[$service]=$delay
@@ -128,7 +131,14 @@ poll_services() {
 	done
 }
 
+make_oneshot_calls() {
+	if [ -f /etc/ssupervisor/oneshot_calls.sh ]; then
+		/etc/ssupervisor/oneshot_calls.sh
+	fi
+}
+
 main() {
+	make_oneshot_calls
 	load_services
 	set +e
 	poll_services

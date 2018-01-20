@@ -3,4 +3,4 @@ DOCKER_IMAGE_NAME=work
 DOCKER_APP_MOUNT_POINT=/home
 
 # Firefox requires --shm-size (using 512m)
-DOCKER_APP_START_OPTIONS="--shm-size 512m"
+DOCKER_APP_START_OPTIONS="--shm-size 512m --privileged"

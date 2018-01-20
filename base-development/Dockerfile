@@ -1,4 +1,4 @@
-FROM remote-desktop-base
+FROM base-desktop
 MAINTAINER Karl Stenerud <kstenerud@gmail.com>
 
 RUN dpkg --add-architecture i386 && \

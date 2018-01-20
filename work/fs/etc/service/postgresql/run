@@ -1,0 +1,13 @@
+#!/bin/sh
+
+initialize() {
+ 	sleep 1
+ 	if [ -f /tmp/dbinit.sql ]; then
+ 		psql -U postgres -f /tmp/dbinit.sql
+ 		rm /tmp/dbinit.sql
+ 	fi
+}
+
+initialize &
+exec /sbin/setuser postgres /usr/lib/postgresql/current/bin/postgres -D ${POSTGRESQL_DB_HOME} >>/var/log/postgresql_stdoe.log 2>&1
+
