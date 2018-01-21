@@ -73,7 +73,7 @@ load_services() {
 		if [[ ! $var = \#* ]]; then
 			service=$(echo "$var" | awk '{print $1}')
 			delay=$(echo "$var" | awk '{print $2}')
-			if [ ! -z "$service" ]; then
+			if [ ! -z "$service" ] && [ "$service" != "#*" ]; then
 				if [ -z "$delay" ]; then
 					delay=0
 				fi
@@ -89,17 +89,7 @@ load_services() {
 }
 
 is_service_running() {
-	name=$1
-	running=1
-	regex=" \\* \\w+ is running"
-	while IFS= read -r line
-	do
-		if [[ "$line" =~ $regex ]]
-		then
-			running=0
-		fi
-	done < <(service $name status)
-	return $running
+	service $1 status >> /dev/null
 }
 
 start_service() {
@@ -113,36 +103,34 @@ supervise_services() {
 	while [ $index -lt $SERVICE_COUNT ]
 	do
 		service=${SERVICE_ORDER[$index]}
+		set +e
 		if ! is_service_running $service; then
 			set +u
 			sleep ${SERVICE_DELAY[$service]}
 			set -u
 			start_service $service
 		fi
+		set -e
 		index=$(( index + 1 ))
 	done
 }
 
-poll_services() {
-	while [ 1 ]
-	do
-		supervise_services
-		sleep $POLL_INTERVAL_SECONDS
-	done
-}
-
-make_oneshot_calls() {
-	if [ -f /etc/ssupervisor/oneshot_calls.sh ]; then
-		/etc/ssupervisor/oneshot_calls.sh
+run_once_per_boot() {
+	if [ -f /etc/ssupervisor/run-once-per-boot.sh ]; then
+		/etc/ssupervisor/run-once-per-boot.sh
 	fi
 }
 
 main() {
-	make_oneshot_calls
 	load_services
-	set +e
-	poll_services
-}
+	supervise_services
+	sleep 1
+	run_once_per_boot
 
+	while [ 1 ]; do
+		sleep $POLL_INTERVAL_SECONDS
+		supervise_services
+	done
+}
 
 main &>> "$LOG_FILE"

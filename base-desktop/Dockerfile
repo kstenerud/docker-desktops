@@ -1,42 +1,102 @@
 FROM ubuntu:17.10
 MAINTAINER Karl Stenerud <kstenerud@gmail.com>
 
-# This image should be run with --init. Otherwise prepare for zombies.
+# Lubuntu desktop in a Docker image, with RDP and X2go remote desktop access.
+#
+# Run this image with --init. Otherwise you'll get zombies.
+#
+# ARGs:
+#
+# USER: The name of the desktop user to create (default ubuntu)
+# PASSWORD: The password to use (default same as the user name)
+# LANG_KB: The language and keyboard to set for the locale.
+#          Format <language> <region> <keyboard layout> <keyboard model>
+#          "en US us pc105" = LANG en_US.UTF-8, with "us" keyboard model "pc105"
+
+
+# =============
+# Configuration
+# =============
+
+ARG USER=ubuntu
+ARG PASSWORD=$USER
+ARG LANG_KB="en US us pc105"
+
+ARG XRDP_VERSION=v0.9.5
+ARG XORGXRDP_VERSION=v0.2.5
 
 
 # =============
 # Initial Setup
 # =============
 
-RUN apt update -y && apt upgrade -y && apt autoremove
-RUN apt install -y locales debconf
+RUN apt update -y && \
+    apt upgrade -y && \
+    apt autoremove -y && \
+    apt install -y locales debconf software-properties-common
 
-# Format <language> <region> <keyboard layout> <keyboard model>
-# "en US us pc105" generates LANG en_US.UTF-8, with "us" keyboard model "pc105"
-ARG LANG_KB="en US us pc105"
-
-COPY fs/usr/sbin/set_lang_kb.sh /usr/sbin/
-RUN /usr/sbin/set_lang_kb.sh $LANG_KB
+COPY fs/usr/sbin/set-lang-kb.sh /usr/sbin/
+RUN /usr/sbin/set-lang-kb.sh $LANG_KB
 
 
 # =================
 # Main Installation
 # =================
 
-ARG XRDP_VERSION=v0.9.5
-ARG XORGXRDP_VERSION=v0.2.5
-
 # Desktop Environment
-RUN apt install -y lubuntu-desktop && \
-    apt remove -y light-locker
+RUN apt install -y lubuntu-desktop && apt remove -y light-locker
+
+# Repositories
+RUN add-apt-repository -y ppa:x2go/stable
+RUN apt update
 
 # Other common software
-RUN apt install -y openssh-server openvpn gvfs-bin net-tools telnet less vim curl \
-                   apt-transport-https zip unzip wget file build-essential git
-
-RUN apt install -y libx11-dev libxfixes-dev libssl-dev libpam0g-dev libtool libjpeg-dev flex bison gettext autoconf libxml-parser-perl libfuse-dev xsltproc libxrandr-dev python-libxml2 nasm xserver-xorg-dev fuse pkg-config
-
-RUN apt install libglu1-mesa x11-apps x11-session-utils xbitmaps xfonts-scalable xinit xinput xorg xorg-docs-core
+RUN apt install -y apt-transport-https \
+                   autoconf \
+                   bison \
+                   build-essential \
+                   curl \
+                   file \
+                   flex \
+                   fuse \
+                   gettext \
+                   git \
+                   gvfs-bin \
+                   less \
+                   libfuse-dev \
+                   libglu1-mesa \
+                   libjpeg-dev \
+                   libpam0g-dev \
+                   libssl-dev \
+                   libtool \
+                   libx11-dev \
+                   libxfixes-dev \
+                   libxml-parser-perl \
+                   libxrandr-dev \
+                   nasm \
+                   net-tools \
+                   openssh-server \
+                   openvpn \
+                   pkg-config \
+                   python-libxml2 \
+                   telnet \
+                   unzip \
+                   vim \
+                   wget \
+                   x11-apps \
+                   x11-session-utils \
+                   x2goserver \
+                   x2goserver-xsession \
+                   xbitmaps \
+                   xfonts-scalable \
+                   xinit \
+                   xinput \
+                   xorg \
+                   xorg-docs-core \
+                   xserver-xorg-core \
+                   xserver-xorg-dev \
+                   xsltproc \
+                   zip
 
 RUN git clone https://github.com/neutrinolabs/xrdp.git && \
     cd xrdp && \
@@ -47,7 +107,6 @@ RUN git clone https://github.com/neutrinolabs/xrdp.git && \
     make install && \
     cd .. && \
     rm -rf xrdp
-
 RUN git clone https://github.com/neutrinolabs/xorgxrdp.git && \
     cd xorgxrdp && \
     git checkout ${XORGXRDP_VERSION} && \
@@ -58,19 +117,15 @@ RUN git clone https://github.com/neutrinolabs/xorgxrdp.git && \
     cd .. && \
     rm -rf xorgxrdp
 
-COPY fs/ /
+COPY fs /tmp/docker-to-copy-fs
+RUN cp -R /tmp/docker-to-copy-fs/* / && rm -rf /tmp/docker-to-copy-fs
 
 
 # ====
 # User
 # ====
 
-ARG USER=karl
-ARG PASSWORD=$USER
-
-RUN addgroup tsusers
-RUN useradd --create-home --shell /bin/bash --user-group --groups adm,sudo,tsusers $USER
-RUN echo "$USER:$PASSWORD" | chpasswd
+RUN desktop-user-add.sh $USER $PASSWORD
 
 
 # ===================
@@ -78,8 +133,7 @@ RUN echo "$USER:$PASSWORD" | chpasswd
 # ===================
 
 # Xrfb stuff
-RUN sed -i 's/allowed_users=console/allowed_users=anybody/' /etc/X11/Xwrapper.config && \
-    apt install -y xserver-xorg-core
+RUN sed -i 's/allowed_users=console/allowed_users=anybody/' /etc/X11/Xwrapper.config
 
 RUN systemctl enable xrdp.service && \
     systemctl enable xrdp-sesman.service

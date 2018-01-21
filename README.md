@@ -28,6 +28,10 @@ Future
 Usage
 -----
 
+Modify common/build.sh to pass in the USER variable you want for the user to create.
+You can also pass in PASSWORD with another --build-arg.
+If you don't pass in USER or PASSWORD when building, it defaults to ubuntu/ubuntu.
+
 Run the script commands inside of one of the subdirs:
 
 - build.sh: Build the image.
