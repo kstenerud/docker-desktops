@@ -117,6 +117,7 @@ RUN git clone https://github.com/neutrinolabs/xorgxrdp.git && \
     cd .. && \
     rm -rf xorgxrdp
 
+# Don't use COPY directly; it overwrites ownership and permissions!
 COPY fs /tmp/docker-to-copy-fs
 RUN cp -R /tmp/docker-to-copy-fs/* / && rm -rf /tmp/docker-to-copy-fs
 

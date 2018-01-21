@@ -11,4 +11,6 @@ RUN apt install -y postgresql-${POSTGRESQL_VERSION}
 RUN sed -i 's/^\(local.*\)peer/\1trust/g' /etc/postgresql/${POSTGRESQL_VERSION}/main/pg_hba.conf
 RUN echo "postgresql" >> /etc/ssupervisor/services
 
-COPY fs/ /
+# Don't use COPY directly; it overwrites ownership and permissions!
+COPY fs /tmp/docker-to-copy-fs
+RUN cp -R /tmp/docker-to-copy-fs/* / && rm -rf /tmp/docker-to-copy-fs
