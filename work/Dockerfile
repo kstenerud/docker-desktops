@@ -14,3 +14,13 @@ RUN echo "postgresql" >> /etc/ssupervisor/services
 # Don't use COPY directly; it overwrites ownership and permissions!
 COPY fs /tmp/docker-to-copy-fs
 RUN cp -R /tmp/docker-to-copy-fs/* / && rm -rf /tmp/docker-to-copy-fs
+
+RUN wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
+    apt install -y ./google-chrome-stable_current_amd64.deb && \
+    rm google-chrome-stable_current_amd64.deb
+RUN wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb && \
+    apt install -y ./chrome-remote-desktop_current_amd64.deb && \
+    rm chrome-remote-desktop_current_amd64.deb
+RUN sed -i 's/\(chrome-remote-desktop.*\)/\1karl/g' /etc/group
+ENV CHROME_REMOTE_DESKTOP_DEFAULT_DESKTOP_SIZES=1920x1080
+
