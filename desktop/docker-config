@@ -3,5 +3,5 @@ DOCKER_IMAGE_NAME=desktop
 DOCKER_APP_MOUNT_POINT=/home
 
 # Firefox requires --shm-size (using 512m)
-#DOCKER_APP_START_OPTIONS="--privileged -v /dev/snd:/dev/snd --shm-size 2g"
-DOCKER_APP_START_OPTIONS="--shm-size 512m"
+#DOCKER_RUN_OPTIONS="--privileged -v /dev/snd:/dev/snd --shm-size 2g"
+DOCKER_RUN_OPTIONS="--shm-size 512m"

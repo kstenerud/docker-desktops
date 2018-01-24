@@ -46,6 +46,14 @@ The base-XYZ directories are for base images, and are not meant to be run direct
 You'll need to build them as precursors to the runnable desktop images.
 
 
+Configuration
+-------------
+
+The docker-config file in each subdir contains any special configuration neded for
+building and running an image. For your purposes, you should at least modify
+base-desktop/docker-config to set your own username and timezone.
+
+
 Current Desktop Types
 ---------------------
 

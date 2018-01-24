@@ -10,5 +10,5 @@ docker run -d \
            ${DOCKER_APP_VOLUME_PARAM} \
            --name ${DOCKER_APP_NAME} \
            -h ${DOCKER_APP_NAME} \
-           ${DOCKER_APP_START_OPTIONS} \
+           ${DOCKER_RUN_OPTIONS} \
            ${DOCKER_IMAGE_NAME}

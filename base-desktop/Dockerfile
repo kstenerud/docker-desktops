@@ -12,6 +12,7 @@ MAINTAINER Karl Stenerud <kstenerud@gmail.com>
 # LANG_KB: The language and keyboard to set for the locale.
 #          Format <language> <region> <keyboard layout> <keyboard model>
 #          "en US us pc105" = LANG en_US.UTF-8, with "us" keyboard model "pc105"
+# TIMEZONE: What time zone to set.
 
 
 # =============
@@ -21,6 +22,7 @@ MAINTAINER Karl Stenerud <kstenerud@gmail.com>
 ARG USER=ubuntu
 ARG PASSWORD=$USER
 ARG LANG_KB="en US us pc105"
+ARG TIMEZONE="America/Vancouver"
 
 ARG XRDP_VERSION=v0.9.5
 ARG XORGXRDP_VERSION=v0.2.5
@@ -33,11 +35,13 @@ ARG XORGXRDP_VERSION=v0.2.5
 RUN apt update -y && \
     apt upgrade -y && \
     apt autoremove -y && \
-    apt install -y locales debconf software-properties-common
+    apt install -y locales tzdata debconf software-properties-common
 
 COPY fs/usr/sbin/set-lang-kb.sh /usr/sbin/
 RUN /usr/sbin/set-lang-kb.sh $LANG_KB
 
+RUN echo "$TIMEZONE" > /etc/timezone && \
+    dpkg-reconfigure -f noninteractive tzdata
 
 # =================
 # Main Installation

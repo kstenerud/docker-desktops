@@ -1,1 +1,3 @@
 DOCKER_IMAGE_NAME=base-desktop
+
+DOCKER_BUILD_OPTIONS="--build-arg USER=karl --build-arg TIMEZONE=Europe/Berlin"

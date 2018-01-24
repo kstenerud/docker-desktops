@@ -24,3 +24,5 @@ RUN wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd
 RUN sed -i 's/\(chrome-remote-desktop.*\)/\1karl/g' /etc/group
 ENV CHROME_REMOTE_DESKTOP_DEFAULT_DESKTOP_SIZES=1920x1080
 
+RUN apt install -y graphviz qiv eog
+
