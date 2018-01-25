@@ -1,0 +1,8 @@
+USER=ubuntu
+PASSWORD=ubuntu
+TIMEZONE="America/Vancouver"
+
+# The language and keyboard to set for the locale.
+# Format: <language> <region> <keyboard layout> <keyboard model>
+# Example: "en US us pc105" = LANG en_US.UTF-8, with "us" keyboard model "pc105"
+LANG_KB="en US us pc105"

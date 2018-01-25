@@ -49,9 +49,8 @@ You'll need to build them as precursors to the runnable desktop images.
 Configuration
 -------------
 
-The docker-config file in each subdir contains any special configuration neded for
-building and running an image. For your purposes, you should at least modify
-base-desktop/docker-config to set your own username and timezone.
+The build and run scripts can be centrally configured via the "configuration" script.
+Use configuration.example as a template to create it before running the scripts.
 
 
 Current Desktop Types

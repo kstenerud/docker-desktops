@@ -4,6 +4,13 @@ DOCKER_BUILD_OPTIONS=
 DOCKER_RUN_OPTIONS=
 declare -A DOCKER_APP_PORT_INDICES
 
+CONFIG_FILE="${DOCKER_APP_DIR}/../configuration"
+if [ ! -f "${CONFIG_FILE}" ]; then
+	echo "Please make a file called \"configuration\" in the root directory. Use configuration.example as a guide."
+	exit 1
+fi
+
+source "${CONFIG_FILE}"
 source "${DOCKER_APP_DIR}/docker-config"
 source "${DOCKER_APP_DIR}/../registry"
 
@@ -17,7 +24,7 @@ set -u
 if [ -z "${DOCKER_APP_PORT_INDEX}" ]; then
 	if [[ ! "$DOCKER_APP_NAME" == base-* ]]; then
 		echo "Please add ${DOCKER_APP_NAME} to the registry"
-		exit -1
+		exit 1
 	fi
 fi
 
