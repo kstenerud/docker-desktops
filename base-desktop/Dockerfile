@@ -102,6 +102,7 @@ RUN apt install -y apt-transport-https \
                    xsltproc \
                    zip
 
+# Xrdp from source
 RUN git clone https://github.com/neutrinolabs/xrdp.git && \
     cd xrdp && \
     git checkout ${XRDP_VERSION} && \
@@ -121,6 +122,14 @@ RUN git clone https://github.com/neutrinolabs/xorgxrdp.git && \
     cd .. && \
     rm -rf xorgxrdp
 
+# Chrome Remote Desktop
+RUN wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
+    apt install -y ./google-chrome-stable_current_amd64.deb && \
+    rm google-chrome-stable_current_amd64.deb
+RUN wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb && \
+    apt install -y ./chrome-remote-desktop_current_amd64.deb && \
+    rm chrome-remote-desktop_current_amd64.deb
+
 # Don't use COPY directly; it overwrites ownership and permissions!
 COPY fs /tmp/docker-to-copy-fs
 RUN cp -R /tmp/docker-to-copy-fs/* / && rm -rf /tmp/docker-to-copy-fs
@@ -139,9 +148,12 @@ RUN desktop-user-add.sh $USER $PASSWORD
 
 # Xrfb stuff
 RUN sed -i 's/allowed_users=console/allowed_users=anybody/' /etc/X11/Xwrapper.config
-
 RUN systemctl enable xrdp.service && \
     systemctl enable xrdp-sesman.service
+
+# Chrome Remote Desktop stuff
+RUN sed -i "s/\(chrome-remote-desktop.*\)/\1${USER}/g" /etc/group
+ENV CHROME_REMOTE_DESKTOP_DEFAULT_DESKTOP_SIZES=1920x1080
 
 # Disable SSH DNS lookup becase it slows down SSH login terribly.
 RUN sed -i 's/UseDNS yes/UseDNS no/g' /etc/ssh/sshd_config

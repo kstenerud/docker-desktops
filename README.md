@@ -11,7 +11,7 @@ This is still early stage. Everything works, but it's not very configurable.
 Features
 --------
 
-- Connect via RDP or X2Go.
+- Connect via RDP, X2Go, or Chrome Remote Desktop.
 - Optionally preserve your home directory as a docker volume.
 - Host anywhere.
 
